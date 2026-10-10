@@ -21,5 +21,7 @@
   "item.nutrisafio_mobs.cursed_helmet": "Casco Maldito",
   "item.nutrisafio_mobs.cursed_chestplate": "Pechera Maldita",
   "item.nutrisafio_mobs.cursed_leggings": "Pantalones Malditos",
-  "item.nutrisafio_mobs.cursed_boots": "Botas Malditas"
+  "item.nutrisafio_mobs.cursed_boots": "Botas Malditas",
+  "advancements.nutrisafio_mobs.cursed_armor.title": "Portador de la Maldición",
+  "advancements.nutrisafio_mobs.cursed_armor.description": "Forja una pieza de la Armadura Maldita en la mesa de herrería"
 }

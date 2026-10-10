@@ -21,5 +21,7 @@
   "item.nutrisafio_mobs.cursed_helmet": "Cursed Helmet",
   "item.nutrisafio_mobs.cursed_chestplate": "Cursed Chestplate",
   "item.nutrisafio_mobs.cursed_leggings": "Cursed Leggings",
-  "item.nutrisafio_mobs.cursed_boots": "Cursed Boots"
+  "item.nutrisafio_mobs.cursed_boots": "Cursed Boots",
+  "advancements.nutrisafio_mobs.cursed_armor.title": "Bearer of the Curse",
+  "advancements.nutrisafio_mobs.cursed_armor.description": "Forge a piece of Cursed Armor at a smithing table"
 }
