@@ -1,6 +1,8 @@
 package com.nutrisafio.mobs.client;
 
 import com.nutrisafio.mobs.BrokenSoulEntity;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.model.HierarchicalModel;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.util.Mth;
@@ -26,6 +28,12 @@ public class BrokenSoulModel extends HierarchicalModel<BrokenSoulEntity> {
     @Override
     public ModelPart root() {
         return this.root;
+    }
+
+    /** Las caras las dibuja JsonModelLoader (funciona tambien con Sodium). */
+    @Override
+    public void renderToBuffer(PoseStack poseStack, VertexConsumer buffer, int packedLight, int packedOverlay, int color) {
+        JsonModelLoader.render(this.root, poseStack, buffer, packedLight, packedOverlay, color);
     }
 
     @Override

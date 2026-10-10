@@ -4,25 +4,46 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
-import net.minecraft.core.Direction;
+import org.joml.Matrix3f;
+import org.joml.Matrix4f;
+import org.joml.Vector3f;
 
 /**
- * Construye un ModelPart a partir del JSON exportado desde Blockbench (assets/nutrisafio_mobs/cpm/*.json).
- * Cada cara trae sus 4 vertices con su UV, asi se respetan las texturas "por cara" del modelo original.
+ * Carga los modelos exportados desde Blockbench (assets/nutrisafio_mobs/cpm/*.json).
+ *
+ * Las piezas (ModelPart) solo guardan la posicion y rotacion, para poder animarlas.
+ * Las caras las dibujamos nosotros mismos, una por una, con su textura "por cara".
+ * Asi el modelo se ve igual con o sin mods de rendimiento (como Sodium).
  */
 public final class JsonModelLoader {
     private JsonModelLoader() {}
+
+    /** Una pieza del modelo: su ModelPart (para animar) y sus caras. */
+    static final class Node {
+        final ModelPart part;
+        final float[][] quads;   // cada cara: 4 x (x,y,z,u,v) + normal (nx,ny,nz) = 23 numeros
+        final List<Node> children = new ArrayList<>();
+
+        Node(ModelPart part, float[][] quads) {
+            this.part = part;
+            this.quads = quads;
+        }
+    }
+
+    private static final Map<ModelPart, List<Node>> MODELS = new IdentityHashMap<>();
 
     public static ModelPart load(String name) {
         String path = "/assets/nutrisafio_mobs/cpm/" + name + ".json";
@@ -30,27 +51,48 @@ public final class JsonModelLoader {
             if (in == null) throw new IllegalStateException("No se encontro el modelo " + path);
             JsonObject json = JsonParser.parseReader(new InputStreamReader(in, StandardCharsets.UTF_8)).getAsJsonObject();
             Map<String, ModelPart> roots = new LinkedHashMap<>();
+            List<Node> nodes = new ArrayList<>();
             for (JsonElement p : json.getAsJsonArray("parts")) {
                 JsonObject o = p.getAsJsonObject();
-                roots.put(o.get("name").getAsString(), buildPart(o));
+                Node node = buildNode(o);
+                roots.put(o.get("name").getAsString(), node.part);
+                nodes.add(node);
             }
-            return new ModelPart(List.of(), roots);
+            ModelPart root = new ModelPart(List.of(), roots);
+            MODELS.put(root, nodes);
+            return root;
         } catch (Exception e) {
             throw new RuntimeException("Error cargando el modelo " + name, e);
         }
     }
 
-    private static ModelPart buildPart(JsonObject o) {
-        List<ModelPart.Cube> cubes = new ArrayList<>();
+    private static Node buildNode(JsonObject o) {
+        List<float[]> quads = new ArrayList<>();
         for (JsonElement c : o.getAsJsonArray("cubes")) {
-            cubes.add(buildCube(c.getAsJsonArray()));
+            for (JsonElement qe : c.getAsJsonArray()) {
+                JsonObject q = qe.getAsJsonObject();
+                float[] data = new float[23];
+                JsonArray vs = q.getAsJsonArray("v");
+                for (int k = 0; k < 4; k++) {
+                    JsonArray v = vs.get(k).getAsJsonArray();
+                    for (int j = 0; j < 5; j++) data[k * 5 + j] = v.get(j).getAsFloat();
+                }
+                JsonArray n = q.getAsJsonArray("n");
+                data[20] = n.get(0).getAsFloat();
+                data[21] = n.get(1).getAsFloat();
+                data[22] = n.get(2).getAsFloat();
+                quads.add(data);
+            }
         }
-        Map<String, ModelPart> children = new HashMap<>();
+        Map<String, ModelPart> childParts = new HashMap<>();
+        List<Node> childNodes = new ArrayList<>();
         for (JsonElement ch : o.getAsJsonArray("children")) {
             JsonObject co = ch.getAsJsonObject();
-            children.put(co.get("name").getAsString(), buildPart(co));
+            Node child = buildNode(co);
+            childParts.put(co.get("name").getAsString(), child.part);
+            childNodes.add(child);
         }
-        ModelPart part = new ModelPart(cubes, children);
+        ModelPart part = new ModelPart(List.of(), childParts);
         JsonArray pv = o.getAsJsonArray("pivot");
         JsonArray rt = o.getAsJsonArray("rot");
         PartPose pose = PartPose.offsetAndRotation(
@@ -59,53 +101,43 @@ public final class JsonModelLoader {
         part.setInitialPose(pose);
         part.loadPose(pose);
         part.visible = o.get("visible").getAsBoolean();
-        return part;
+        Node node = new Node(part, quads.toArray(new float[0][]));
+        node.children.addAll(childNodes);
+        return node;
     }
 
-    private static java.lang.reflect.Field polygonsField;
-
-    /** Las caras del cubo son privadas en Minecraft: las leemos buscando el campo por su tipo. */
-    private static ModelPart.Polygon[] polygonsOf(ModelPart.Cube cube) {
-        try {
-            if (polygonsField == null) {
-                for (java.lang.reflect.Field f : ModelPart.Cube.class.getDeclaredFields()) {
-                    if (f.getType() == ModelPart.Polygon[].class) {
-                        f.setAccessible(true);
-                        polygonsField = f;
-                        break;
-                    }
-                }
-            }
-            return (ModelPart.Polygon[]) polygonsField.get(cube);
-        } catch (IllegalAccessException e) {
-            throw new RuntimeException("No se pudieron leer las caras del cubo", e);
-        }
+    /** Dibuja el modelo completo (llamado desde renderToBuffer de cada modelo). */
+    public static void render(ModelPart root, PoseStack poseStack, VertexConsumer buffer,
+                              int light, int overlay, int color) {
+        List<Node> nodes = MODELS.get(root);
+        if (nodes == null || !root.visible) return;
+        poseStack.pushPose();
+        root.translateAndRotate(poseStack);
+        for (Node node : nodes) renderNode(node, poseStack, buffer, light, overlay, color);
+        poseStack.popPose();
     }
 
-    /** Crea un cubo normal de Minecraft y luego reemplaza sus caras por las del modelo. */
-    private static ModelPart.Cube buildCube(JsonArray quads) {
-        ModelPart.Cube cube = new ModelPart.Cube(0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, false, 1, 1,
-                EnumSet.allOf(Direction.class));
-        ModelPart.Polygon[] polys = polygonsOf(cube);
-        for (int i = 0; i < polys.length; i++) {
-            ModelPart.Polygon poly = polys[i];
-            if (i < quads.size()) {
-                JsonObject q = quads.get(i).getAsJsonObject();
-                JsonArray vs = q.getAsJsonArray("v");
+    private static void renderNode(Node node, PoseStack poseStack, VertexConsumer buffer,
+                                   int light, int overlay, int color) {
+        if (!node.part.visible) return;
+        poseStack.pushPose();
+        node.part.translateAndRotate(poseStack);
+        if (node.quads.length > 0) {
+            Matrix4f pose = poseStack.last().pose();
+            Matrix3f normalMat = poseStack.last().normal();
+            Vector3f pos = new Vector3f();
+            Vector3f nrm = new Vector3f();
+            for (float[] q : node.quads) {
+                normalMat.transform(nrm.set(q[20], q[21], q[22])).normalize();
                 for (int k = 0; k < 4; k++) {
-                    JsonArray v = vs.get(k).getAsJsonArray();
-                    poly.vertices[k] = new ModelPart.Vertex(v.get(0).getAsFloat(), v.get(1).getAsFloat(),
-                            v.get(2).getAsFloat(), v.get(3).getAsFloat(), v.get(4).getAsFloat());
-                }
-                JsonArray n = q.getAsJsonArray("n");
-                poly.normal.set(n.get(0).getAsFloat(), n.get(1).getAsFloat(), n.get(2).getAsFloat());
-            } else {
-                // cara que no existe en el modelo: se vuelve un punto invisible
-                for (int k = 0; k < 4; k++) {
-                    poly.vertices[k] = new ModelPart.Vertex(0, 0, 0, 0, 0);
+                    int b = k * 5;
+                    pose.transformPosition(q[b] / 16.0F, q[b + 1] / 16.0F, q[b + 2] / 16.0F, pos);
+                    buffer.addVertex(pos.x(), pos.y(), pos.z(), color, q[b + 3], q[b + 4],
+                            overlay, light, nrm.x(), nrm.y(), nrm.z());
                 }
             }
         }
-        return cube;
+        for (Node child : node.children) renderNode(child, poseStack, buffer, light, overlay, color);
+        poseStack.popPose();
     }
 }
