@@ -62,11 +62,31 @@ public final class JsonModelLoader {
         return part;
     }
 
+    private static java.lang.reflect.Field polygonsField;
+
+    /** Las caras del cubo son privadas en Minecraft: las leemos buscando el campo por su tipo. */
+    private static ModelPart.Polygon[] polygonsOf(ModelPart.Cube cube) {
+        try {
+            if (polygonsField == null) {
+                for (java.lang.reflect.Field f : ModelPart.Cube.class.getDeclaredFields()) {
+                    if (f.getType() == ModelPart.Polygon[].class) {
+                        f.setAccessible(true);
+                        polygonsField = f;
+                        break;
+                    }
+                }
+            }
+            return (ModelPart.Polygon[]) polygonsField.get(cube);
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException("No se pudieron leer las caras del cubo", e);
+        }
+    }
+
     /** Crea un cubo normal de Minecraft y luego reemplaza sus caras por las del modelo. */
     private static ModelPart.Cube buildCube(JsonArray quads) {
         ModelPart.Cube cube = new ModelPart.Cube(0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, false, 1, 1,
                 EnumSet.allOf(Direction.class));
-        ModelPart.Polygon[] polys = cube.polygons;
+        ModelPart.Polygon[] polys = polygonsOf(cube);
         for (int i = 0; i < polys.length; i++) {
             ModelPart.Polygon poly = polys[i];
             if (i < quads.size()) {
