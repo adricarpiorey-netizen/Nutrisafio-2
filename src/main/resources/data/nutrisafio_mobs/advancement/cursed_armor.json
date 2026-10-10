@@ -5,10 +5,11 @@
       "id": "nutrisafio_mobs:cursed_helmet"
     },
     "title": {
-      "translate": "advancements.nutrisafio_mobs.cursed_armor.title"
+      "text": "Portador de la Maldición",
+      "color": "dark_purple"
     },
     "description": {
-      "translate": "advancements.nutrisafio_mobs.cursed_armor.description"
+      "text": "Forja una pieza de la Armadura Maldita en la mesa de herrería"
     },
     "frame": "challenge",
     "show_toast": true,
