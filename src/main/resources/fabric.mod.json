@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "nutrisafio_mobs",
+  "version": "${version}",
+  "name": "Nutrisafio Mobs",
+  "description": "Mobs, corazones, cofre con candado y armadura maldita del servidor Nutrisafio.",
+  "authors": ["Vicky"],
+  "license": "All-Rights-Reserved",
+  "environment": "*",
+  "entrypoints": {
+    "main": ["com.nutrisafio.mobs.NutrisafioMobs"],
+    "client": ["com.nutrisafio.mobs.client.NutrisafioMobsClient"]
+  },
+  "depends": {
+    "fabricloader": ">=0.16.0",
+    "minecraft": "~1.21.1",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}
