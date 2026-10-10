@@ -229,12 +229,12 @@ public class NutrisafioMobs implements ModInitializer {
         BiomeModifications.addSpawn(BiomeSelectors.foundInTheNether(),
                 MobCategory.MONSTER, BROKEN_SOUL, 8, 1, 1);
 
-        // Quibungo: de noche en el mundo normal, tan raro como una bruja (peso 5)
+        // Quibungo: de noche en el mundo normal, bastante comun (peso 25; zombie 95, enderman 10, bruja 5)
         FabricDefaultAttributeRegistry.register(QUIBUNGO, QuibungoEntity.createAttributes());
         SpawnPlacements.register(QUIBUNGO, SpawnPlacementTypes.ON_GROUND,
                 Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, Monster::checkMonsterSpawnRules);
         BiomeModifications.addSpawn(BiomeSelectors.foundInOverworld(),
-                MobCategory.MONSTER, QUIBUNGO, 5, 1, 1);
+                MobCategory.MONSTER, QUIBUNGO, 25, 1, 1);
 
         // Los corazones extra del Corazon Dorado se conservan al morir
         ServerPlayerEvents.COPY_FROM.register((oldPlayer, newPlayer, alive) ->
