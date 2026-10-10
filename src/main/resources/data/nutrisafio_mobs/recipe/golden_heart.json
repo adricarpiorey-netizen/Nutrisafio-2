@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "GBG",
+    "BCB",
+    "GBG"
+  ],
+  "key": {
+    "G": { "item": "nutrisafio_mobs:blood_drop" },
+    "B": { "item": "minecraft:gold_block" },
+    "C": { "item": "nutrisafio_mobs:heart" }
+  },
+  "result": { "id": "nutrisafio_mobs:golden_heart", "count": 1 }
+}

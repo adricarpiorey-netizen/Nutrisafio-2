@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "nutrisafio_mobs:item/cursed_chestplate"
+  }
+}

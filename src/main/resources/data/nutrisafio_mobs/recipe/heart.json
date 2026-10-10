@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "GGG",
+    "GMG",
+    "GGG"
+  ],
+  "key": {
+    "G": { "item": "nutrisafio_mobs:blood_drop" },
+    "M": { "item": "minecraft:apple" }
+  },
+  "result": { "id": "nutrisafio_mobs:heart", "count": 1 }
+}

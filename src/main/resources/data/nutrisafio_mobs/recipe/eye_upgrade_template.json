@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "OOO",
+    "OPO",
+    "OOO"
+  ],
+  "key": {
+    "O": { "item": "nutrisafio:ojo_maldito" },
+    "P": { "item": "minecraft:netherite_upgrade_smithing_template" }
+  },
+  "result": { "id": "nutrisafio_mobs:eye_upgrade_template", "count": 1 }
+}
