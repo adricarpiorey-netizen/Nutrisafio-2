@@ -1,0 +1,71 @@
+{
+  "parent": "minecraft:story/shiny_gear",
+  "display": {
+    "icon": {
+      "id": "nutrisafio_mobs:cursed_helmet"
+    },
+    "title": {
+      "translate": "advancements.nutrisafio_mobs.cursed_armor.title"
+    },
+    "description": {
+      "translate": "advancements.nutrisafio_mobs.cursed_armor.description"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "fabricar_helmet": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "recipe_id": "nutrisafio_mobs:cursed_helmet_smithing"
+      }
+    },
+    "fabricar_chestplate": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "recipe_id": "nutrisafio_mobs:cursed_chestplate_smithing"
+      }
+    },
+    "fabricar_leggings": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "recipe_id": "nutrisafio_mobs:cursed_leggings_smithing"
+      }
+    },
+    "fabricar_boots": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "recipe_id": "nutrisafio_mobs:cursed_boots_smithing"
+      }
+    },
+    "tener_pieza": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "nutrisafio_mobs:cursed_helmet",
+              "nutrisafio_mobs:cursed_chestplate",
+              "nutrisafio_mobs:cursed_leggings",
+              "nutrisafio_mobs:cursed_boots"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "fabricar_helmet",
+      "fabricar_chestplate",
+      "fabricar_leggings",
+      "fabricar_boots",
+      "tener_pieza"
+    ]
+  ],
+  "rewards": {
+    "experience": 100
+  }
+}
