@@ -1,0 +1,4 @@
+{
+  "structures": [{"structure": "nutrisafio_mobs:bosque_maldito", "weight": 1}],
+  "placement": {"type": "minecraft:random_spread", "spacing": 40, "separation": 16, "salt": 71939051}
+}
