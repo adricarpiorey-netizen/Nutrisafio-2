@@ -209,6 +209,9 @@ public class NutrisafioMobs implements ModInitializer {
 
     @Override
     public void onInitialize() {
+        // Zona nueva que aparece sola en el mundo: Bosque Maldito
+        BosqueMaldito.registrar();
+
         FabricDefaultAttributeRegistry.register(JESTER, JesterEntity.createAttributes());
 
         // Aparece como un monstruo normal: de noche / en la oscuridad, sobre el suelo
@@ -220,6 +223,9 @@ public class NutrisafioMobs implements ModInitializer {
 
         // Beast: no aparece solo; solo durante la Noche de Sangre (ver BloodNightSpawner)
         FabricDefaultAttributeRegistry.register(BEAST, BeastEntity.createAttributes());
+        // Reglas para que, dentro del Bosque Maldito, solo aparezca en la oscuridad
+        SpawnPlacements.register(BEAST, SpawnPlacementTypes.ON_GROUND,
+                Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, Monster::checkMonsterSpawnRules);
         ServerTickEvents.END_SERVER_TICK.register(BloodNightSpawner::tick);
 
         // Broken Soul: en todo el Nether, poco comun (peso 8; el Enderman del Nether tiene 10)
