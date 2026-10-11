@@ -1,0 +1,19 @@
+{
+  "type": "nutrisafio_mobs:bosque_maldito",
+  "biomes": "#nutrisafio_mobs:has_structure/bosque_maldito",
+  "step": "top_layer_modification",
+  "terrain_adaptation": "none",
+  "spawn_overrides": {
+    "monster": {
+      "bounding_box": "full",
+      "spawns": [
+        {"type": "nutrisafio_mobs:beast", "weight": 40, "minCount": 1, "maxCount": 2},
+        {"type": "nutrisafio_mobs:jester", "weight": 30, "minCount": 1, "maxCount": 2},
+        {"type": "nutrisafio_mobs:quibungo", "weight": 15, "minCount": 1, "maxCount": 1},
+        {"type": "minecraft:skeleton", "weight": 40, "minCount": 1, "maxCount": 3},
+        {"type": "minecraft:zombie", "weight": 40, "minCount": 1, "maxCount": 3},
+        {"type": "minecraft:spider", "weight": 20, "minCount": 1, "maxCount": 2}
+      ]
+    }
+  }
+}
