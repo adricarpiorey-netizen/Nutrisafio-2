@@ -1,0 +1,26 @@
+name: Compilar Nutrisafio Economia
+on:
+  push:
+    paths: ['economia/**', '.github/workflows/economia.yml']
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Descomprimir el codigo
+        run: cd economia && unzip -o -q codigo.zip
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: current
+      - name: Compilar
+        working-directory: economia
+        run: gradle build --no-daemon
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nutrisafio-economia
+          path: economia/build/libs/*.jar
