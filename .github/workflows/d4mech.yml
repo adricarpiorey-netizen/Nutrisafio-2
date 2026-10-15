@@ -23,6 +23,15 @@ jobs:
           gradle build --no-daemon > build.log 2>&1
           echo "EXIT=$?" >> build.log
           tail -5 build.log
+      - name: Classpath
+        working-directory: d4mech
+        run: |
+          gradle copyCp --no-daemon -q || true
+          ls build/cp | head -100
+          du -sh build/cp
+      - name: Publicar classpath
+        run: |
+          mkdir -p /tmp/cp && cp d4mech/build/cp/*.jar /tmp/cp/ && cd /tmp/cp && git init -q && git checkout -q -b salida-d4mech-cp && git add . && git -c user.name=bot -c user.email=bot@x commit -qm cp && git push -f https://x-access-token:${{ github.token }}@github.com/${{ github.repository }} salida-d4mech-cp
       - name: Publicar resultado en rama
         run: |
           mkdir -p /tmp/pub
