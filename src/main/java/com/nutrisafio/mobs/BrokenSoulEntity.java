@@ -22,10 +22,9 @@ import net.minecraft.world.level.block.state.BlockState;
 
 /**
  * Broken Soul: un alma rota del Nether.
- * - Es neutral como el Enderman: si no lo atacas, no te hace nada.
- * - Si lo atacas, te persigue para matarte.
+ * - SUPER AGRESIVO: te detecta desde 30 bloques y te persigue para matarte.
  * - 30 de vida (15 corazones; el Enderman tiene 20)
- * - 8 de dano por golpe (el Enderman hace 7)
+ * - 24 de dano por golpe (el triple que antes; 12 corazones)
  * - Misma velocidad que el Enderman, no le afecta el fuego ni la lava.
  * - Suelta Huesos de Wither.
  */
@@ -40,8 +39,8 @@ public class BrokenSoulEntity extends Monster {
         return Monster.createMonsterAttributes()
                 .add(Attributes.MAX_HEALTH, 30.0)
                 .add(Attributes.MOVEMENT_SPEED, 0.3)
-                .add(Attributes.ATTACK_DAMAGE, 8.0)
-                .add(Attributes.FOLLOW_RANGE, 64.0)
+                .add(Attributes.ATTACK_DAMAGE, 24.0)
+                .add(Attributes.FOLLOW_RANGE, 30.0)
                 .add(Attributes.STEP_HEIGHT, 1.0);
     }
 
@@ -52,8 +51,9 @@ public class BrokenSoulEntity extends Monster {
         this.goalSelector.addGoal(7, new WaterAvoidingRandomStrollGoal(this, 1.0, 0.0F));
         this.goalSelector.addGoal(8, new LookAtPlayerGoal(this, Player.class, 8.0F));
         this.goalSelector.addGoal(8, new RandomLookAroundGoal(this));
-        // Solo ataca a quien le pego (no busca jugadores por su cuenta)
+        // Ataca a quien le pegue y ademas busca jugadores por su cuenta (detecta a 30 bloques)
         this.targetSelector.addGoal(1, new HurtByTargetGoal(this));
+        this.targetSelector.addGoal(2, new net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal<>(this, Player.class, false));
     }
 
     @Override
