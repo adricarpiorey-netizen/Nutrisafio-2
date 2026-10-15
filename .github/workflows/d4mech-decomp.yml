@@ -1,0 +1,35 @@
+name: Descompilar DEDSAFIO 4 Mechanics
+on: [workflow_dispatch, push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Descomprimir
+        run: cd d4mech_decomp && unzip -o -q decomp.zip
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: current
+      - name: Remapear
+        working-directory: d4mech_decomp
+        run: gradle dependencies --no-daemon -q > /dev/null || gradle compileJava --no-daemon
+      - name: Descompilar
+        working-directory: d4mech_decomp
+        run: |
+          find . ~/.gradle -name '*.jar' | grep -i slim || true
+          J=$(find . ~/.gradle -name '*.jar' | grep -i slim | grep -v '^./slim.jar' | head -1)
+          echo "remapeado: $J"
+          MC=$(find ~/.gradle .gradle -name '*.jar' | grep -i 'minecraft-merged' | grep -v sources | head -1)
+          echo "mc: $MC"
+          curl -sL -o vf.jar https://repo1.maven.org/maven2/org/vineflower/vineflower/1.10.1/vineflower-1.10.1.jar
+          mkdir -p out
+          java -jar vf.jar -e="$MC" "$J" out/
+          cd out && zip -q -r ../fuentes.zip . && cd .. && ls -la fuentes.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fuentes-d4mech
+          path: d4mech_decomp/fuentes.zip
