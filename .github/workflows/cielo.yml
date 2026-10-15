@@ -1,0 +1,38 @@
+name: Compilar Cielo Rojo
+on: [workflow_dispatch, push]
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Descomprimir el codigo
+        run: cd cielo && unzip -o -q codigo.zip
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: current
+      - name: Compilar
+        working-directory: cielo
+        run: |
+          set +e
+          gradle build --no-daemon > build.log 2>&1
+          echo "EXIT=$?" >> build.log
+          tail -5 build.log
+      - name: Probar servidor
+        working-directory: cielo
+        run: |
+          mkdir -p run && echo "eula=true" > run/eula.txt
+          printf "online-mode=false\nlevel-type=minecraft\\:flat\n" > run/server.properties
+          (sleep 200; echo stop) | timeout 320 gradle runServer --no-daemon > server.log 2>&1 || true
+          grep -E "Done|ERROR|Exception|Mixin|mixin" server.log | head -50
+      - name: Publicar resultado en rama
+        run: |
+          mkdir -p /tmp/pub
+          cp cielo/build.log cielo/server.log /tmp/pub/ 2>/dev/null || true
+          cp cielo/build/libs/*.jar /tmp/pub/ 2>/dev/null || true
+          cd /tmp/pub && git init -q && git checkout -q -b salida-cielo-build && git add . && git -c user.name=bot -c user.email=bot@x commit -qm build && git push -f https://x-access-token:${{ github.token }}@github.com/${{ github.repository }} salida-cielo-build
