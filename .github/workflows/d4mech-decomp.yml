@@ -1,5 +1,7 @@
 name: Descompilar DEDSAFIO 4 Mechanics
 on: [workflow_dispatch, push]
+permissions:
+  contents: write
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -33,3 +35,7 @@ jobs:
         with:
           name: fuentes-d4mech
           path: d4mech_decomp/fuentes.zip
+      - name: Publicar en rama
+        run: |
+          mkdir -p /tmp/pub && cp d4mech_decomp/fuentes.zip /tmp/pub/
+          cd /tmp/pub && git init -q && git checkout -q -b salida-d4mech && git add . && git -c user.name=bot -c user.email=bot@x commit -qm fuentes && git push -f https://x-access-token:${{ github.token }}@github.com/${{ github.repository }} salida-d4mech
