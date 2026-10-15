@@ -1,0 +1,31 @@
+name: Compilar DEDSAFIO 4 Mechanics 1.21.1
+on: [workflow_dispatch, push]
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Descomprimir el codigo
+        run: cd d4mech && unzip -o -q codigo.zip
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: current
+      - name: Compilar
+        working-directory: d4mech
+        run: |
+          set +e
+          gradle build --no-daemon > build.log 2>&1
+          echo "EXIT=$?" >> build.log
+          tail -5 build.log
+      - name: Publicar resultado en rama
+        run: |
+          mkdir -p /tmp/pub
+          cp d4mech/build.log /tmp/pub/
+          cp d4mech/build/libs/*.jar /tmp/pub/ 2>/dev/null || true
+          cd /tmp/pub && git init -q && git checkout -q -b salida-d4mech-build && git add . && git -c user.name=bot -c user.email=bot@x commit -qm build && git push -f https://x-access-token:${{ github.token }}@github.com/${{ github.repository }} salida-d4mech-build
