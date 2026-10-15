@@ -29,12 +29,21 @@ jobs:
           gradle copyCp --no-daemon -q || true
           ls build/cp | head -100
           du -sh build/cp
-      - name: Publicar classpath
+      - name: Firmas
+        working-directory: d4mech
         run: |
-          mkdir -p /tmp/cp && cp d4mech/build/cp/*.jar /tmp/cp/ && cd /tmp/cp && git init -q && git checkout -q -b salida-d4mech-cp && git add . && git -c user.name=bot -c user.email=bot@x commit -qm cp && git push -f https://x-access-token:${{ github.token }}@github.com/${{ github.repository }} salida-d4mech-cp
+          ls build/cp > cp.txt
+          for c in net.minecraft.client.renderer.LevelRenderer net.minecraft.client.gui.Gui net.minecraft.client.renderer.entity.EntityRenderer net.minecraft.client.renderer.FogRenderer net.minecraft.client.Camera net.minecraft.client.multiplayer.ClientLevel net.minecraft.client.gui.screens.TitleScreen net.minecraft.world.level.block.CarvedPumpkinBlock net.minecraft.client.gui.screens.inventory.AbstractContainerScreen; do echo "=== $c" >> sigs.txt; javap -p -cp "build/cp/*" $c >> sigs.txt 2>&1; done
+      - name: Probar servidor
+        working-directory: d4mech
+        run: |
+          mkdir -p run && echo "eula=true" > run/eula.txt
+          printf "online-mode=false\nlevel-type=minecraft\\:flat\n" > run/server.properties
+          (sleep 200; echo stop) | timeout 320 gradle runServer --no-daemon > server.log 2>&1 || true
+          grep -E "Done|ERROR|Exception|Mixin|mixin" server.log | head -50
       - name: Publicar resultado en rama
         run: |
           mkdir -p /tmp/pub
-          cp d4mech/build.log /tmp/pub/
+          cp d4mech/build.log d4mech/sigs.txt d4mech/cp.txt d4mech/server.log /tmp/pub/ 2>/dev/null || true
           cp d4mech/build/libs/*.jar /tmp/pub/ 2>/dev/null || true
           cd /tmp/pub && git init -q && git checkout -q -b salida-d4mech-build && git add . && git -c user.name=bot -c user.email=bot@x commit -qm build && git push -f https://x-access-token:${{ github.token }}@github.com/${{ github.repository }} salida-d4mech-build
