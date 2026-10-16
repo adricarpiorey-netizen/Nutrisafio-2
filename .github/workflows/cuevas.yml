@@ -14,7 +14,9 @@ jobs:
       - name: Preparar servidor de prueba
         run: |
           mkdir -p srv/mods && cd srv
-          curl -sSL -o server.jar https://meta.fabricmc.net/v2/versions/loader/1.21.1/0.16.14/1.0.1/server/jar
+          LOADER=$(curl -s https://meta.fabricmc.net/v2/versions/loader | python3 -c "import sys,json;print([v['version'] for v in json.load(sys.stdin) if v['stable']][0])")
+          echo "loader $LOADER"
+          curl -sSL -o server.jar https://meta.fabricmc.net/v2/versions/loader/1.21.1/$LOADER/1.0.1/server/jar
           FAPI=$(curl -s 'https://api.modrinth.com/v2/project/fabric-api/version?game_versions=%5B%221.21.1%22%5D&loaders=%5B%22fabric%22%5D' | python3 -c "import sys,json;print(json.load(sys.stdin)[0]['files'][0]['url'])")
           curl -sSL -o mods/fabric-api.jar "$FAPI"
           curl -sSL -o mods/alexscaves.jar https://cdn.modrinth.com/data/Jj8KJUGX/versions/FEmo5ugU/alexscaves-2.0.2-6.jar
