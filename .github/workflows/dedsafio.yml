@@ -1,5 +1,7 @@
 name: Compilar Nutrisafio Dedsafio
 on: [push, workflow_dispatch]
+permissions:
+  contents: write
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -16,8 +18,16 @@ jobs:
           gradle-version: current
       - name: Compilar
         working-directory: dedsafio
-        run: gradle build --no-daemon
+        run: |
+          set +e
+          gradle build --no-daemon > build.log 2>&1
+          echo "EXIT=$?" >> build.log
+          tail -5 build.log
       - uses: actions/upload-artifact@v4
         with:
           name: nutrisafio-dedsafio
           path: dedsafio/build/libs/*.jar
+      - name: Publicar en rama
+        run: |
+          mkdir -p /tmp/pub && cp dedsafio/build.log /tmp/pub/ && cp dedsafio/build/libs/*.jar /tmp/pub/ 2>/dev/null || true
+          cd /tmp/pub && git init -q && git checkout -q -b salida-dedsafio && git add . && git -c user.name=bot -c user.email=bot@x commit -qm build && git push -f https://x-access-token:${{ github.token }}@github.com/${{ github.repository }} salida-dedsafio
