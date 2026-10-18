@@ -1,0 +1,32 @@
+name: Compilar Vulcanus
+on:
+  push:
+    paths: ['vulcanus/**', '.github/workflows/vulcanus.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Descomprimir el codigo
+        run: cd vulcanus && unzip -o -q codigo.zip
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: current
+      - name: Compilar
+        working-directory: vulcanus
+        run: |
+          set +e
+          gradle build --no-daemon > build.log 2>&1
+          echo "EXIT=$?" >> build.log
+          tail -5 build.log
+      - name: Publicar en rama
+        run: |
+          mkdir -p /tmp/pub && cp vulcanus/build.log /tmp/pub/ && cp vulcanus/build/libs/*.jar /tmp/pub/ 2>/dev/null || true
+          cd /tmp/pub && git init -q && git checkout -q -b salida-vulcanus && git add . && git -c user.name=bot -c user.email=bot@x commit -qm build && git push -f https://x-access-token:${{ github.token }}@github.com/${{ github.repository }} salida-vulcanus
